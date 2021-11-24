@@ -3,12 +3,10 @@
 tsharkTimeFormat="e"
 
 function readParameters() {
-	while getopts ":f:i:o:t:y:" option
+	while getopts ":f:o:t:y:" option
 	do
 		case $option in
 			f) formatCsv="$OPTARG"
-			;;
-			i) pcapngFile="$OPTARG"
 			;;
 			o) outputFile="$OPTARG"
 			;;
@@ -29,6 +27,8 @@ function readParameters() {
 			;;
 		esac
 	done
+	shift $((OPTIND-1))
+    pcapngFiles=( $@ )
 
 	if [ -z "$formatCsv" ]
 	then
@@ -36,7 +36,7 @@ function readParameters() {
 		printHelp
 		exit 1
 	fi
-	if [ -z "$pcapngFile" ]
+	if [ -z "$pcapngFiles" ]
 	then
 		echo "Need to provide a PCAPNG file to transform!" >&2
 		printHelp
@@ -66,24 +66,29 @@ function readCsvFormat() {
 }
 
 function transformPcapng() {
-	echo "Transforming data from '$pcapngFile' to '$outputFile'. This might take a while..."
+	echo "Transforming data to '$outputFile'. This might take a while..."
 
 	csvHeader=$(head -n 1 $formatCsv)
 	echo "$csvHeader" > $outputFile
-	tshark \
-	  -T fields \
-	  -t $tsharkTimeFormat \
-	  $tsharkDisplayFilter \
-	  -E separator=, \
-	  -E quote=d \
-	  $tsharkFieldParams \
-	  -r $pcapngFile >> $outputFile
+
+	for file in "${pcapngFiles[@]}"
+	do
+		echo "Transforming $file..."
+		tshark \
+			-T fields \
+			-t $tsharkTimeFormat \
+			$tsharkDisplayFilter \
+			-E separator=, \
+			-E quote=d \
+			$tsharkFieldParams \
+			-r $file >> $outputFile
+	done
 
 	echo "Done!"
 }
 
 function printHelp() {
-	echo "$0 -f <format-file.csv> -i <input.pcapng> -o <output.csv> [-t <tshark time format>] [-y <display filter>]" >&2
+	echo "$0 -f <format-file.csv> -o <output.csv> [-t <tshark time format>] [-y <display filter>] <input.pcap> [<input2.pcap> ...]" >&2
 	echo "" >&2
 	echo "Usage:" >&2
 	echo "  -f <format-file.csv>" >&2

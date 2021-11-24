@@ -14,6 +14,6 @@ You can then specify a CSV file with exactly one line, containing a comma-separa
 _ws.col.Time,ip.src,ip.dst,tcp.srcport,tcp.dstport,http.request.method,http.request.uri
 ```
 
-Now, run the tool: `./convert.sh -f <format-file.csv> -i <input.pcapng> -o <output.csv> [-t <tshark time format>] [-y <display filter>]`
+Now, run the tool: `./convert.sh -f <format-file.csv> -o <output.csv> [-t <tshark time format>] [-y <display filter>] <input.pcap> [<input2.pcap> ...]`. You can supply as many input files as you want, they will be transformed and written to the CSV in the order you provide them. This is useful if your tshark recording was split into multiple files.
 
 You can provide a Wireshark display filter to filter the packets that end up in the CSV. If you use the `_ws.col.Time` column containing the packet timestamp, the `-t` parameter can be used to control the format. It defaults to `e` for a linux timestamp. Check `man tshark` for all other options.
